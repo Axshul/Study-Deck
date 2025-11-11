@@ -1,8 +1,0 @@
-{
-  "subjects": [
-    { "name": "Mathematics", "color": "#2f80ed", "topics": ["Algebra", "Geometry"] },
-    { "name": "Physics", "color": "#eb5757", "topics": ["Mechanics", "Optics"] },
-    { "name": "Chemistry", "color": "#27ae60", "topics": ["Organic", "Inorganic"] }
-  ]
-}
-
