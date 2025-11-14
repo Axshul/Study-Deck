@@ -88,6 +88,11 @@
       .btn, .ghost, .toggle { padding:8px 10px; }
       .viewer { padding: 12px; }
     }
+    /* Desktop utils collapse: hide right bar when requested */
+    @media (min-width: 1201px){
+      .aside-collapsed .main { grid-template-columns: var(--nav-w) 1fr; }
+      .aside-collapsed aside { display:none; }
+    }
 
     .results { padding: 8px 12px; }
     .result { padding: 8px 10px; border:1px solid var(--border); border-radius:10px; margin:8px 0; background:#0c0e12; cursor:pointer; }
@@ -95,17 +100,47 @@
     .hl { background: rgba(94,177,255,0.25); border-radius:4px; }
 
     .banner { padding:8px 12px; border-bottom:1px solid var(--border); color:var(--muted); }
+
+    /* Subtle motion & focus styles */
+    .btn, .ghost, .toggle {
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+    }
+    .btn:hover, .ghost:hover, .toggle:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(94,177,255,0.35);
+      transform: translateY(-0.5px);
+    }
+    .btn:active, .ghost:active, .toggle:active {
+      transform: translateY(0.5px) scale(0.99);
+      box-shadow: none;
+    }
+    header {
+      box-shadow: 0 1px 0 rgba(255,255,255,0.03), 0 12px 40px rgba(0,0,0,0.75);
+    }
+    .viewer-enter {
+      animation: viewerFade 180ms ease-out;
+    }
+    @keyframes viewerFade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 960px){
+      header {
+        position: sticky;
+        top: 0;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="app" class="app" data-theme="dark">
     <header>
       <div class="brand"><div class="dot"></div><div>Study-Deck</div></div>
-      <span id="repoLabel" class="pill">Loading…</span>
+      <span id="repoLabel" class="pill">Loading</span>
       <div class="spacer"></div>
-      <button id="filesBtn" class="ghost" title="Show files">Files</button>
-      <button id="utilsBtn" class="ghost" title="Show utilities">Utils</button>
-      <input id="searchBox" type="text" placeholder="Search filenames or contents…" />
+      <button id="filesBtn" class="ghost" title="Toggle files">Files</button>
+      <button id="utilsBtn" class="ghost" title="Toggle utilities">Utils</button>
+      <input id="searchBox" type="text" placeholder="Search filenames or contents" />
       <button id="searchToggle" class="toggle" title="Toggle content search">Contents: Off</button>
       <button id="notesBtn" class="btn" title="Open NeuralNotes">Notes</button>
     </header>
@@ -116,8 +151,6 @@
         <ul id="subjectsTree" class="tree"></ul>
         <h3>Decks</h3>
         <ul id="decksTree" class="tree"></ul>
-        <h3>Users</h3>
-        <ul id="usersTree" class="tree"></ul>
       </nav>
       <div class="content">
         <div id="breadcrumbs" class="breadcrumbs">/</div>
@@ -137,7 +170,7 @@
         </section>
         <section>
           <h4>Quick Notes</h4>
-          <textarea id="quickNotes" placeholder="Write notes… stored locally"></textarea>
+          <textarea id="quickNotes" placeholder="Write notes stored locally"></textarea>
           <div class="row" style="margin-top:8px">
             <button id="downloadNotes" class="ghost">Download .md</button>
             <span id="indexStatus" class="muted">Idle</span>
@@ -145,8 +178,8 @@
         </section>
         <section>
           <h4>Todo</h4>
-          <div class="row"><input id="todoInput" class="full" type="text" placeholder="New todo…" /><button id="addTodo" class="ghost">Add</button></div>
-          <div id="todoList"></div>
+          <div class="row"><input id="todoInput" class="full" type="text" placeholder="New todo" /><button id="addTodo" class="ghost">Add</button></div>
+          <div id="todoList" class="muted"></div>
         </section>
         <section>
           <h4>Timer</h4>
@@ -249,7 +282,6 @@
     const API = REPO ? `https://api.github.com/repos/${REPO.owner}/${REPO.repo}` : null;
     const subjectsTree = $('#subjectsTree');
     const decksTree = $('#decksTree');
-    const usersTree = $('#usersTree');
     const viewer = $('#viewer');
     const breadcrumbs = $('#breadcrumbs');
     const deckbar = $('#deckbar');
@@ -257,7 +289,7 @@
     const nextBtn = $('#nextItem');
     const prevBtn = $('#prevItem');
 
-    // SEARCH UI
+    // SEARCH / LAYOUT UI
     const searchBox = $('#searchBox');
     const searchToggle = $('#searchToggle');
     const notesBtn = $('#notesBtn');
@@ -266,11 +298,30 @@
     const utilsBtn = $('#utilsBtn');
     const backdrop = $('#backdrop');
     let contentSearch = false;
-    searchToggle.onclick = ()=>{ contentSearch = !contentSearch; searchToggle.textContent = 'Contents: ' + (contentSearch? 'On':'Off'); if(searchBox.value.trim()) runSearch(); };
+
+    function toggleClass(el, cls){ el.classList.toggle(cls); }
+    function closeDrawers(){
+      appEl.classList.remove('nav-open');
+      appEl.classList.remove('aside-open');
+    }
+    function toggleUtils(){
+      const isSmall = window.matchMedia('(max-width: 1200px)').matches;
+      if(isSmall){
+        toggleClass(appEl, 'aside-open');
+      } else {
+        appEl.classList.toggle('aside-collapsed');
+      }
+    }
+
+    searchToggle.onclick = ()=>{
+      contentSearch = !contentSearch;
+      searchToggle.textContent = 'Contents: ' + (contentSearch? 'On':'Off');
+      if(searchBox.value.trim()) runSearch();
+    };
     notesBtn.onclick = ()=> nnDialog.showModal();
-    filesBtn.onclick = ()=>{ appEl.classList.add('nav-open'); };
-    utilsBtn.onclick = ()=>{ appEl.classList.add('aside-open'); };
-    backdrop.onclick = ()=>{ appEl.classList.remove('nav-open'); appEl.classList.remove('aside-open'); };
+    filesBtn.onclick = ()=>{ toggleClass(appEl, 'nav-open'); };
+    utilsBtn.onclick = toggleUtils;
+    backdrop.onclick = closeDrawers;
 
     // CACHES
     const cache = new Map();
@@ -364,6 +415,8 @@
     }
 
     async function openFile(item, path){
+      // Whenever a file is opened, close any mobile drawers so the content is visible.
+      if(typeof closeDrawers === 'function') closeDrawers();
       currentDeck = null; updateDeckBar();
       setBreadcrumbs(path);
       const name = item.name.toLowerCase();
@@ -430,7 +483,7 @@
 
     async function loadRoot(){
       if(!REPO) return;
-      for(const [root, el] of [['subjects',subjectsTree], ['decks',decksTree], ['users',usersTree]]){
+      for(const [root, el] of [['subjects',subjectsTree], ['decks',decksTree]]){
         try{
           const items = await listDir(root);
           el.innerHTML = '';
@@ -540,16 +593,193 @@
       const hh = d.getHours().toString().padStart(2,'0');
       const mm = d.getMinutes().toString().padStart(2,'0');
       const ss = d.getSeconds().toString().padStart(2,'0');
-      clockDisplay && (clockDisplay.textContent = `${hh}:${mm}:${ss}`);
-      dateDisplay && (dateDisplay.textContent = d.toLocaleDateString());
+      if(clockDisplay) clockDisplay.textContent = `${hh}:${mm}:${ss}`;
+      if(dateDisplay) dateDisplay.textContent = d.toLocaleDateString();
     }
     setInterval(updateClock, 1000); updateClock();
+
+    // Quick Notes persistence & download
+    const quickNotes = $('#quickNotes');
+    const downloadNotes = $('#downloadNotes');
+    if(quickNotes){
+      quickNotes.value = localStorage.getItem('sd-quick-notes') || '';
+      quickNotes.addEventListener('input', ()=>{
+        localStorage.setItem('sd-quick-notes', quickNotes.value || '');
+      });
+    }
+    if(downloadNotes && quickNotes){
+      downloadNotes.onclick = ()=>{
+        const blob = new Blob([quickNotes.value || ''], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'study-notes.md';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      };
+    }
+
+    // Todo list (localStorage-backed)
+    const todoInput = $('#todoInput');
+    const addTodoBtn = $('#addTodo');
+    const todoListEl = $('#todoList');
+    const TODO_KEY = 'sd-todos';
+    let todos = [];
+
+    function loadTodos(){
+      try{ todos = JSON.parse(localStorage.getItem(TODO_KEY) || '[]'); }
+      catch{ todos = []; }
+      renderTodos();
+    }
+
+    function saveTodos(){
+      localStorage.setItem(TODO_KEY, JSON.stringify(todos));
+    }
+
+    function renderTodos(){
+      if(!todoListEl) return;
+      if(!todos.length){
+        todoListEl.innerHTML = '<div class="muted">No tasks yet. Add your first focus item.</div>';
+        return;
+      }
+      todoListEl.innerHTML = '';
+      todos.forEach((t, idx)=>{
+        const row = document.createElement('div');
+        row.className = 'todo-item';
+        row.innerHTML = `
+          <input type="checkbox" ${t.done ? 'checked' : ''} />
+          <span style="flex:1; text-decoration:${t.done ? 'line-through' : 'none'}; opacity:${t.done?0.55:1}">${escapeHtml(t.text)}</span>
+          <button class="ghost" data-action="remove" title="Remove">×</button>
+        `;
+        const checkbox = row.querySelector('input[type=checkbox]');
+        const removeBtn = row.querySelector('button[data-action="remove"]');
+        checkbox.addEventListener('change', ()=>{
+          todos[idx].done = !!checkbox.checked;
+          saveTodos();
+          renderTodos();
+        });
+        removeBtn.addEventListener('click', ()=>{
+          todos.splice(idx,1);
+          saveTodos();
+          renderTodos();
+        });
+        todoListEl.appendChild(row);
+      });
+    }
+
+    function addTodoFromInput(){
+      if(!todoInput) return;
+      const text = todoInput.value.trim();
+      if(!text) return;
+      todos.unshift({ text, done:false, createdAt:Date.now() });
+      todoInput.value = '';
+      saveTodos();
+      renderTodos();
+    }
+
+    if(addTodoBtn && todoInput){
+      addTodoBtn.onclick = addTodoFromInput;
+      todoInput.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          addTodoFromInput();
+        }
+      });
+      loadTodos();
+    }
+
+    // Timer (simple stopwatch with persistence)
+    const timerDisplay = $('#timerDisplay');
+    const timerStartBtn = $('#timerStart');
+    const timerResetBtn = $('#timerReset');
+    const TIMER_KEY = 'sd-timer';
+    let timerState = { running:false, elapsed:0, startedAt:null };
+    let timerInterval = null;
+
+    function loadTimer(){
+      try{ const stored = JSON.parse(localStorage.getItem(TIMER_KEY) || 'null'); if(stored) timerState = stored; }
+      catch{}
+      if(timerState.running && timerState.startedAt){
+        const now = Date.now();
+        const extra = Math.max(0, Math.floor((now - timerState.startedAt)/1000));
+        timerState.elapsed += extra;
+        timerState.startedAt = now - extra*1000;
+      }
+      updateTimerDisplay();
+      if(timerState.running) startTimerInterval();
+    }
+
+    function saveTimer(){
+      localStorage.setItem(TIMER_KEY, JSON.stringify(timerState));
+    }
+
+    function formatSeconds(total){
+      const m = Math.floor(total/60).toString().padStart(2,'0');
+      const s = (total%60).toString().padStart(2,'0');
+      return `${m}:${s}`;
+    }
+
+    function updateTimerDisplay(){
+      if(!timerDisplay) return;
+      timerDisplay.textContent = formatSeconds(timerState.elapsed);
+      if(timerStartBtn) timerStartBtn.textContent = timerState.running ? 'Pause' : 'Start';
+    }
+
+    function startTimerInterval(){
+      if(timerInterval) return;
+      timerInterval = setInterval(()=>{
+        timerState.elapsed += 1;
+        updateTimerDisplay();
+        saveTimer();
+      }, 1000);
+    }
+
+    function stopTimerInterval(){
+      if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+    }
+
+    function toggleTimer(){
+      if(!timerStartBtn) return;
+      if(!timerState.running){
+        timerState.running = true;
+        timerState.startedAt = Date.now();
+        startTimerInterval();
+      } else {
+        timerState.running = false;
+        if(timerState.startedAt){
+          const extra = Math.max(0, Math.floor((Date.now() - timerState.startedAt)/1000));
+          timerState.elapsed += extra;
+        }
+        timerState.startedAt = null;
+        stopTimerInterval();
+      }
+      updateTimerDisplay();
+      saveTimer();
+    }
+
+    function resetTimer(){
+      timerState = { running:false, elapsed:0, startedAt:null };
+      stopTimerInterval();
+      updateTimerDisplay();
+      saveTimer();
+    }
+
+    if(timerStartBtn && timerResetBtn){
+      timerStartBtn.onclick = toggleTimer;
+      timerResetBtn.onclick = resetTimer;
+      loadTimer();
+    }
 
     // INITIALIZATION
     if(REPO){ loadRoot(); }
 
     // Deep-link: ?path=...
-    try{ const p = new URL(location.href).searchParams.get('path'); if(p && REPO){ getItem(p).then(it=>openFile(it,p)).catch(()=>{}); } }catch{}
+    try{
+      const p = new URL(location.href).searchParams.get('path');
+      if(p && REPO){ getItem(p).then(it=>openFile(it,p)).catch(()=>{}); }
+    }catch{}
   })();
   </script>
 </body>
