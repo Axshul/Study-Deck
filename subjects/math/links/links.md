@@ -1,0 +1,2 @@
+- [Chain rule (Wikipedia)](https://en.wikipedia.org/wiki/Chain_rule)
+- [Great calculus video](https://youtu.be/2TtnD4jmCDQ)

@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Study-Deck</title>
+  <meta name="sd:repo" content="Axshul/Study-Deck" />
+  <style>
+    :root {
+      --bg: #0a0b0d; --bg-elev: #0f1115; --fg: #e7e9ee; --muted: #9aa3ad; --border: #20242b; --accent: #5eb1ff;
+      --shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.45);
+      --radius: 12px; --radius-sm: 8px;
+      --content-max: 1100px; --font-size: 14px;
+    }
+    [data-theme="light"] {
+      --bg: #ffffff; --bg-elev:#f6f8fb; --fg:#0f141a; --muted:#566070; --border:#d8dee6; --accent:#006adc;
+      --shadow: 0 1px 0 rgba(0,0,0,0.05) inset, 0 8px 24px rgba(0,0,0,0.08);
+    }
+    html, body { height: 100%; }
+    body { margin: 0; color: var(--fg); background: radial-gradient(1200px 600px at 10% -10%, #0b0c10 0%, transparent 60%), radial-gradient(1000px 500px at 90% -20%, #0b0c10 0%, transparent 60%), var(--bg); font: var(--font-size)/1.6 Inter, ui-sans-serif, system-ui, Segoe UI, Roboto, Apple Color Emoji, Noto Color Emoji, sans-serif; }
+
+    .app { display: grid; grid-template-rows: 60px 1fr; height: 100%; }
+    header { display:flex; align-items:center; gap:12px; padding:0 16px; border-bottom:1px solid var(--border); background: linear-gradient(180deg, var(--bg-elev), transparent); backdrop-filter: blur(6px); position: sticky; top:0; z-index: 10; }
+    header .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px; }
+    header .brand .dot { width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 24px var(--accent); }
+    header .spacer { flex:1; }
+    header input[type=text] { background: #0c0e12; border:1px solid var(--border); color:var(--fg); padding:10px 12px; border-radius:10px; min-width:320px; outline: none; box-shadow: var(--shadow); }
+    .toggle { padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:#0c0e12; color:var(--fg); cursor:pointer; }
+    .btn { background: var(--accent); color: #071019; border: none; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; }
+    .ghost { background: transparent; border:1px solid var(--border); color: var(--fg); padding:10px 14px; border-radius:10px; cursor:pointer; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:var(--muted); }
+
+    .main { display:grid; grid-template-columns: 300px 1fr 420px; height: calc(100vh - 60px); }
+    nav { border-right:1px solid var(--border); overflow:auto; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); }
+    nav h3 { margin:14px 14px 6px; font-size:11px; text-transform:uppercase; letter-spacing:.14em; color: var(--muted); }
+    .tree { list-style:none; margin:0; padding:0; }
+    .tree li { padding:8px 12px 8px 16px; cursor:pointer; display:flex; align-items:center; gap:10px; border-left:2px solid transparent; }
+    .tree li:hover { background: rgba(255,255,255,0.04); }
+    .tree .indent { margin-left: 14px; border-left: 1px dashed var(--border); border-radius:0 0 0 var(--radius-sm); }
+    .empty { color:var(--muted); padding:12px 14px; }
+
+    .content { display:grid; grid-template-rows: 44px auto 1fr; min-width:0; }
+    .breadcrumbs { padding:8px 14px; border-bottom:1px solid var(--border); color: var(--muted); white-space:nowrap; overflow:auto; }
+    .deckbar { display:none; align-items:center; gap:10px; padding:8px 14px; border-bottom:1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); }
+    .deckbar.active { display:flex; }
+    .viewer { padding: 20px 24px; overflow:auto; max-width: var(--content-max); width: 100%; }
+    .viewer img { max-width: 100%; border-radius:10px; }
+    .viewer pre { background: #0b0f14; color:#e6e6e6; padding:14px; border-radius:10px; overflow:auto; border:1px solid var(--border); box-shadow: var(--shadow); }
+    .viewer code { background: #0b0f14; padding:2px 6px; border-radius:6px; }
+    .viewer table { width:100%; border-collapse: collapse; margin: 8px 0 14px; }
+    .viewer th, .viewer td { border:1px solid var(--border); padding:8px 10px; }
+    .viewer blockquote { margin: 10px 0; padding: 8px 12px; border-left:3px solid var(--accent); background: rgba(255,255,255,0.03); border-radius:6px; }
+    .viewer h1, .viewer h2, .viewer h3 { border-bottom: 1px dashed var(--border); padding-bottom: 6px; }
+
+    aside { border-left:1px solid var(--border); overflow:auto; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); display:flex; flex-direction:column; }
+    aside section { padding:14px; border-bottom:1px solid var(--border); }
+    aside h4 { margin:0 0 10px; color: var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.12em; font-size:11px; }
+    textarea { width:100%; min-height:140px; resize:vertical; background:#0c0e12; color:var(--fg); border:1px solid var(--border); border-radius:10px; padding:10px; box-shadow: var(--shadow); }
+    input[type=text].full { width:100%; box-sizing:border-box; }
+    .todo-item { display:flex; align-items:center; gap:8px; margin:6px 0; }
+    .todo-item input[type=checkbox] { transform: scale(1.2); }
+    .muted { color: var(--muted); }
+    .row { display:flex; gap:8px; align-items:center; }
+    .hidden { display:none; }
+    iframe.pdf, iframe.web { width:100%; height:72vh; border:1px solid var(--border); border-radius:10px; background:white; box-shadow: var(--shadow); }
+    iframe.notes { width:100%; height: calc(100% - 20px); border:1px solid var(--border); border-radius:10px; background:#0c0e12; box-shadow: var(--shadow); }
+
+    .results { padding: 8px 12px; }
+    .result { padding: 8px 10px; border:1px solid var(--border); border-radius:10px; margin:8px 0; background:#0c0e12; cursor:pointer; }
+    .result:hover { border-color: var(--accent); }
+    .hl { background: rgba(94,177,255,0.25); border-radius:4px; }
+
+    .banner { padding:8px 12px; border-bottom:1px solid var(--border); color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div id="app" class="app" data-theme="dark">
+    <header>
+      <div class="brand"><div class="dot"></div><div>Study-Deck</div></div>
+      <span id="repoLabel" class="pill">Loading…</span>
+      <div class="spacer"></div>
+      <input id="searchBox" type="text" placeholder="Search filenames or contents…" />
+      <button id="searchToggle" class="toggle" title="Toggle content search">Contents: Off</button>
+      <button id="notesBtn" class="btn" title="Open NeuralNotes">Notes</button>
+    </header>
+    <div class="main">
+      <nav>
+        <div id="banner" class="banner hidden"></div>
+        <h3>Subjects</h3>
+        <ul id="subjectsTree" class="tree"></ul>
+        <h3>Decks</h3>
+        <ul id="decksTree" class="tree"></ul>
+        <h3>Users</h3>
+        <ul id="usersTree" class="tree"></ul>
+      </nav>
+      <div class="content">
+        <div id="breadcrumbs" class="breadcrumbs">/</div>
+        <div id="deckbar" class="deckbar">
+          <strong>Deck Player</strong>
+          <span id="deckStatus" class="muted"></span>
+          <div class="spacer"></div>
+          <button id="prevItem" class="ghost">Prev</button>
+          <button id="nextItem" class="ghost">Next</button>
+        </div>
+        <div id="viewer" class="viewer">Welcome to Study-Deck. Pick a file on the left, or search.</div>
+      </div>
+      <aside>
+        <section>
+          <h4>Clock</h4>
+          <div class="row"><span id="clockDisplay" style="font-variant-numeric:tabular-nums; font-size:16px; font-weight:700;"></span><span id="dateDisplay" class="muted"></span></div>
+        </section>
+        <section>
+          <h4>Quick Notes</h4>
+          <textarea id="quickNotes" placeholder="Write notes… stored locally"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button id="downloadNotes" class="ghost">Download .md</button>
+            <span id="indexStatus" class="muted">Idle</span>
+          </div>
+        </section>
+        <section>
+          <h4>Todo</h4>
+          <div class="row"><input id="todoInput" class="full" type="text" placeholder="New todo…" /><button id="addTodo" class="ghost">Add</button></div>
+          <div id="todoList"></div>
+        </section>
+        <section>
+          <h4>Timer</h4>
+          <div class="row"><span id="timerDisplay" style="font-variant-numeric:tabular-nums; font-weight:700; font-size:16px;">00:00</span><button id="timerStart" class="ghost">Start</button><button id="timerReset" class="ghost">Reset</button></div>
+        </section>
+        <section>
+          <h4>Theme</h4>
+          <div class="row"><button id="openTheme" class="ghost">Customize</button><span class="muted">Accent, font size, width</span></div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <dialog id="themeDialog">
+    <form method="dialog" style="min-width:380px; background:var(--bg-elev); color:var(--fg); border:1px solid var(--border); padding:16px; border-radius:12px;">
+      <h3 style="margin:0 0 10px">Theme</h3>
+      <div style="display:grid; gap:12px;">
+        <label>Accent color <input id="accentInput" type="color" value="#5eb1ff" /></label>
+        <label>Base font size <input id="fontInput" type="range" min="12" max="18" value="14" /></label>
+        <label>Content width <input id="widthInput" type="range" min="800" max="1400" value="1100" /></label>
+        <div class="row"><button value="cancel" class="ghost">Close</button><button id="saveTheme" value="default" class="btn">Save</button></div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="nnDialog">
+    <form method="dialog" style="width:90vw; max-width:1200px; height:85vh; background:var(--bg-elev); color:var(--fg); border:1px solid var(--border); padding:0; border-radius:12px;">
+      <div style="display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border);">
+        <strong style="flex:1;">NeuralNotes</strong>
+        <button value="cancel" class="ghost">Close</button>
+      </div>
+      <div style="height:calc(100% - 48px); padding:12px;">
+        <iframe src="https://axshul.github.io/NeuralNotes/" style="width:100%; height:100%; border:1px solid var(--border); border-radius:10px; background:#0c0e12;" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+  (function(){
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+    const appEl = $('#app');
+
+    // THEME
+    const themeDialog = $('#themeDialog');
+    const themeBtn = $('#openTheme');
+    const accentInput = $('#accentInput');
+    const fontInput = $('#fontInput');
+    const widthInput = $('#widthInput');
+    const saved = JSON.parse(localStorage.getItem('sd-theme-settings')||'{}');
+    if(saved.accent) document.documentElement.style.setProperty('--accent', saved.accent);
+    if(saved.font) document.documentElement.style.setProperty('--font-size', saved.font+'px');
+    if(saved.width) document.documentElement.style.setProperty('--content-max', saved.width+'px');
+    themeBtn.onclick = ()=> themeDialog.showModal();
+    $('#saveTheme').onclick = (e)=>{
+      e.preventDefault();
+      const obj = {
+        accent: accentInput.value,
+        font: fontInput.value,
+        width: widthInput.value,
+      };
+      localStorage.setItem('sd-theme-settings', JSON.stringify(obj));
+      document.documentElement.style.setProperty('--accent', obj.accent);
+      document.documentElement.style.setProperty('--font-size', obj.font+'px');
+      document.documentElement.style.setProperty('--content-max', obj.width+'px');
+      themeDialog.close();
+    };
+
+    // OWNER/REPO detection: no prompts
+    const repoLabel = $('#repoLabel');
+    function getOwnerRepo(){
+      const url = new URL(location.href);
+      const qpOwner = url.searchParams.get('owner');
+      const qpRepo = url.searchParams.get('repo');
+      if(qpOwner && qpRepo) return { owner: qpOwner, repo: qpRepo };
+      const host = location.hostname;
+      const parts = location.pathname.split('/').filter(Boolean);
+      if(host.endsWith('github.io') && parts.length >= 1){
+        return { owner: host.split('.')[0], repo: parts[0] };
+      }
+      // meta fallback
+      const meta = document.querySelector('meta[name="sd:repo"]');
+      if(meta && meta.content && meta.content.includes('/')){
+        const [owner, repo] = meta.content.split('/');
+        return { owner, repo };
+      }
+      return null; // local file/localhost cannot enumerate repo without hints
+    }
+    let REPO = getOwnerRepo();
+    if(!REPO){
+      repoLabel.textContent = 'Repo: (unresolved)';
+      const banner = $('#banner');
+      banner.classList.remove('hidden');
+      banner.textContent = 'Open this on GitHub Pages for auto-detection, or append ?owner=<user>&repo=Study-Deck to the URL.';
+    } else {
+      repoLabel.textContent = REPO.owner + '/' + REPO.repo;
+    }
+
+    const API = REPO ? `https://api.github.com/repos/${REPO.owner}/${REPO.repo}` : null;
+    const subjectsTree = $('#subjectsTree');
+    const decksTree = $('#decksTree');
+    const usersTree = $('#usersTree');
+    const viewer = $('#viewer');
+    const breadcrumbs = $('#breadcrumbs');
+    const deckbar = $('#deckbar');
+    const deckStatus = $('#deckStatus');
+    const nextBtn = $('#nextItem');
+    const prevBtn = $('#prevItem');
+
+    // SEARCH UI
+    const searchBox = $('#searchBox');
+    const searchToggle = $('#searchToggle');
+    const notesBtn = $('#notesBtn');
+    const nnDialog = $('#nnDialog');
+    let contentSearch = false;
+    searchToggle.onclick = ()=>{ contentSearch = !contentSearch; searchToggle.textContent = 'Contents: ' + (contentSearch? 'On':'Off'); if(searchBox.value.trim()) runSearch(); };
+    notesBtn.onclick = ()=> nnDialog.showModal();
+
+    // CACHES
+    const cache = new Map();
+    async function listDir(path){
+      const key = 'dir:'+path;
+      if(cache.has(key)) return cache.get(key);
+      const res = await fetch(`${API}/contents/${path.split('/').map(encodeURIComponent).join('/')}`);
+      if(!res.ok) throw new Error('Failed to list '+path+': '+res.status);
+      const data = await res.json();
+      cache.set(key, data);
+      return data;
+    }
+    async function getItem(path){
+      const key = 'item:'+path;
+      if(cache.has(key)) return cache.get(key);
+      const res = await fetch(`${API}/contents/${path.split('/').map(encodeURIComponent).join('/')}`);
+      if(!res.ok) throw new Error('Failed to get '+path+': '+res.status);
+      const data = await res.json();
+      cache.set(key, data);
+      return data;
+    }
+
+    function sortItems(items){
+      const norm = s => s.toLowerCase();
+      const numPref = s => { const m = s.match(/^(\d+)[-_]/); return m ? parseInt(m[1],10) : Infinity; };
+      return items.slice().sort((a,b)=>{
+        const an = numPref(a.name), bn = numPref(b.name);
+        if(an !== bn) return an - bn;
+        return norm(a.name) < norm(b.name) ? -1 : 1;
+      });
+    }
+
+    function iconFor(item){
+      if(item.type === 'dir') return '📁';
+      const n = item.name.toLowerCase();
+      if(n.endsWith('.md')) return '📝';
+      if(n.endsWith('.pdf')) return '📄';
+      if(n.endsWith('.link')) return '🔗';
+      if(/\.(png|jpg|jpeg|gif|svg|webp)$/.test(n)) return '🖼️';
+      return '📃';
+    }
+
+    function setBreadcrumbs(path){ breadcrumbs.textContent = '/' + path; }
+
+    // VIEWERS
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+
+    function renderMarkdown(md){
+      // escape
+      md = md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // code fences
+      md = md.replace(/```([\s\S]*?)```/g, (m,code)=>`<pre><code>${code.replace(/\n$/,'')}</code></pre>`);
+      // hr
+      md = md.replace(/^\s*(?:---|\*\*\*|___)\s*$/gm,'<hr/>');
+      // headings
+      md = md.replace(/^######\s+(.*)$/gm,'<h6>$1</h6>')
+             .replace(/^#####\s+(.*)$/gm,'<h5>$1</h5>')
+             .replace(/^####\s+(.*)$/gm,'<h4>$1</h4>')
+             .replace(/^###\s+(.*)$/gm,'<h3>$1</h3>')
+             .replace(/^##\s+(.*)$/gm,'<h2>$1</h2>')
+             .replace(/^#\s+(.*)$/gm,'<h1>$1</h1>');
+      // blockquote
+      md = md.replace(/^>\s?(.*)$/gm,'<blockquote>$1</blockquote>');
+      // task list
+      md = md.replace(/^- \[ \] (.*)$/gm,"<li><input type='checkbox' disabled/> $1</li>")
+             .replace(/^- \[x\] (.*)$/gmi,"<li><input type='checkbox' checked disabled/> $1</li>");
+      md = md.replace(/(?:<li>.*<\/li>\n?)+/g, m=>`<ul>\n${m}\n</ul>`);
+      // inline code
+      md = md.replace(/`([^`]+)`/g,'<code>$1</code>');
+      // links
+      md = md.replace(/\[([^\]]+)\]\(([^\)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+      // bold/italic
+      md = md.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+             .replace(/\*([^*]+)\*/g,'<em>$1</em>');
+      // tables (simple)
+      md = md.replace(/(^\|.*\|\n)(^\|?\s*[-:| ]+\n)((?:^\|.*\|\n?)+)/gmi, (m, head, sep, body)=>{
+        const toCells = row=> row.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim());
+        const h = toCells(head.split('\n')[0]);
+        const rows = body.trim().split('\n').map(r=>toCells(r));
+        let html = '<table><thead><tr>'+h.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>';
+        rows.forEach(r=> html += '<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>');
+        html += '</tbody></table>';
+        return html; 
+      });
+      // unordered lists (regular)
+      md = md.replace(/^(?:- |\* )(.*)$/gm,'<li>$1</li>');
+      md = md.replace(/(?:<li>.*<\/li>\n?)+/g, m=>`<ul>\n${m}\n</ul>`);
+      // paragraphs
+      md = md.replace(/^(?!<h\d|<ul|<pre|<li|<\/li|<\/ul|<blockquote|<table|<hr)(.+)$/gm,'<p>$1</p>');
+      return md;
+    }
+
+    async function openFile(item, path){
+      currentDeck = null; updateDeckBar();
+      setBreadcrumbs(path);
+      const name = item.name.toLowerCase();
+      const url = item.download_url;
+      if(name.endsWith('.md')){
+        const txt = await (await fetch(url)).text();
+        viewer.innerHTML = renderMarkdown(txt);
+        return;
+      }
+      if(name.endsWith('.pdf')){ viewer.innerHTML = `<iframe class="pdf" src="${url}" allow="fullscreen"></iframe>`; return; }
+      if(name.endsWith('.link')){
+        const raw = await (await fetch(url)).text();
+        const href = raw.split(/\r?\n/)[0].trim();
+        const yt = toYouTubeEmbed(href);
+        if(yt){ viewer.innerHTML = `<div class="row"><a class="btn" href="${href}" target="_blank">Open on YouTube</a></div><br/><iframe class="web" src="${yt}" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>`; }
+        else if(/\.(mp4|webm|ogg|mov|mkv)(\?|#|$)/.test(href)){ viewer.innerHTML = `<video src="${href}" controls style="width:100%; max-height:72vh; border:1px solid var(--border); border-radius:10px; background:black;"></video>`; }
+        else if(/\.(mp3|wav|ogg|m4a)(\?|#|$)/.test(href)){ viewer.innerHTML = `<audio src="${href}" controls style="width:100%"></audio>`; }
+        else if(/\.(pdf)(\?|#|$)/.test(href)){ viewer.innerHTML = `<iframe class="pdf" src="${href}"></iframe>`; }
+        else { viewer.innerHTML = `<div class="row"><a class="btn" href="${href}" target="_blank">Open link</a></div>`; }
+        return;
+      }
+      if(/\.(doc|docx|ppt|pptx|xls|xlsx)$/.test(name)){
+        const office = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(url);
+        viewer.innerHTML = `<iframe class="web" src="${office}" allowfullscreen></iframe>`; return;
+      }
+      if(/\.(mp4|webm|ogg|mov|mkv)$/.test(name)){ viewer.innerHTML = `<video src="${url}" controls style="width:100%; max-height:72vh; border:1px solid var(--border); border-radius:10px; background:black;"></video>`; return; }
+      if(/\.(mp3|wav|ogg|m4a)$/.test(name)){ viewer.innerHTML = `<audio src="${url}" controls style="width:100%"></audio>`; return; }
+      if(/\.(png|jpg|jpeg|gif|svg|webp)$/.test(name)){ viewer.innerHTML = `<img src="${url}" alt="${item.name}"/>`; return; }
+      if(/\.(html|htm)$/.test(name)){ viewer.innerHTML = `<iframe class="web" src="${url}" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>`; return; }
+      // text-ish fallback
+      try { const txt = await (await fetch(url)).text(); viewer.innerHTML = `<pre><code>${escapeHtml(txt)}</code></pre>`; }
+      catch { viewer.innerHTML = `<div class="muted">Cannot preview. <a href="${url}" target="_blank">Download</a></div>`; }
+    }
+
+    function toYouTubeEmbed(url){
+      try{ const u = new URL(url);
+        if(u.hostname === 'youtu.be'){ const id = u.pathname.slice(1); const t = u.searchParams.get('t'); return `https://www.youtube.com/embed/${id}` + (t?`?start=${parseInt(t,10)||0}`:''); }
+        if(u.hostname.includes('youtube.com')){ const id = u.searchParams.get('v'); const t = u.searchParams.get('t'); if(id) return `https://www.youtube.com/embed/${id}` + (t?`?start=${parseInt(t,10)||0}`:''); }
+      }catch{}
+      return null;
+    }
+
+    // NAV TREE
+    function makeNode(item, fullPath){
+      const li = document.createElement('li');
+      li.dataset.name = item.name.toLowerCase();
+      li.innerHTML = `<span>${iconFor(item)}</span><span>${item.name}</span>`;
+      li.onclick = async (e)=>{
+        e.stopPropagation();
+        if(item.type === 'dir'){
+          if(fullPath.startsWith('decks/')){ loadDeck(fullPath); }
+          if(li._loaded){ const child = li.querySelector('ul'); if(child) child.classList.toggle('hidden'); return; }
+          const children = await listDir(fullPath);
+          const ul = document.createElement('ul'); ul.className = 'tree indent';
+          sortItems(children).forEach(ch=> ul.appendChild(makeNode(ch, `${fullPath}/${ch.name}`)));
+          li.appendChild(ul); li._loaded = true; li.classList.add('open');
+        } else {
+          openFile(item, fullPath);
+        }
+      };
+      return li;
+    }
+
+    async function loadRoot(){
+      if(!REPO) return;
+      for(const [root, el] of [['subjects',subjectsTree], ['decks',decksTree], ['users',usersTree]]){
+        try{
+          const items = await listDir(root);
+          el.innerHTML = '';
+          sortItems(items).forEach(it=> el.appendChild(makeNode(it, `${root}/${it.name}`)));
+        }catch(e){ el.innerHTML = '<div class="empty">No '+root+' yet</div>'; }
+      }
+    }
+
+    // DECK MODE
+    let currentDeck = null; let deckItems = []; let deckIndex = 0;
+    async function loadDeck(path){
+      currentDeck = path; deckItems = []; deckIndex = 0;
+      deckItems = await collectDeckItems(path);
+      updateDeckBar();
+      if(deckItems.length){ openFile(deckItems[0].item, deckItems[0].path); }
+    }
+    async function collectDeckItems(path){
+      const out = [];
+      async function walk(p){
+        const items = await listDir(p);
+        for(const it of sortItems(items)){
+          const childPath = `${p}/${it.name}`;
+          if(it.type === 'dir') await walk(childPath);
+          else if(/\.(md|pdf|link|png|jpe?g|gif|webp)$/i.test(it.name)) out.push({item: it, path: childPath});
+        }
+      }
+      try{ await walk(path); }catch{}
+      return out;
+    }
+    function updateDeckBar(){
+      if(!currentDeck || !deckItems.length){ deckbar.classList.remove('active'); deckStatus.textContent = ''; return; }
+      deckbar.classList.add('active');
+      deckStatus.textContent = `${deckIndex+1} / ${deckItems.length}`;
+    }
+    nextBtn.onclick = ()=>{ if(!deckItems.length) return; deckIndex = Math.min(deckItems.length-1, deckIndex+1); const d = deckItems[deckIndex]; openFile(d.item, d.path); updateDeckBar(); };
+    prevBtn.onclick = ()=>{ if(!deckItems.length) return; deckIndex = Math.max(0, deckIndex-1); const d = deckItems[deckIndex]; openFile(d.item, d.path); updateDeckBar(); };
+
+    // FULL-TEXT SEARCH (client-side index via GitHub API)
+    const indexStatus = $('#indexStatus');
+    let indexed = false; let indexMap = new Map(); let indexPaths = [];
+    async function buildIndex(){
+      if(indexed || !REPO) return;
+      indexStatus.textContent = 'Indexing…';
+      const roots = ['subjects','decks'];
+      async function walk(p){
+        let items; try { items = await listDir(p); } catch { return; }
+        for(const it of items){
+          const childPath = `${p}/${it.name}`;
+          if(it.type === 'dir'){ await walk(childPath); }
+          else if(/\.(md|txt|link)$/i.test(it.name)){
+            try{
+              const txt = await (await fetch(it.download_url)).text();
+              indexMap.set(childPath, txt.toLowerCase());
+              indexPaths.push({path: childPath, item: it});
+              indexStatus.textContent = `Indexed ${indexMap.size} files…`;
+            }catch{}
+          }
+        }
+      }
+      for(const r of roots) await walk(r);
+      indexed = true; indexStatus.textContent = `Indexed ${indexMap.size} files.`;
+    }
+
+    function showSearchResults(q, matches){
+      viewer.innerHTML = `<div class="results"><div class="muted">Results for “${escapeHtml(q)}” (${matches.length})</div>${matches.map(m=>`<div class=\"result\" data-path=\"${m.path}\">${escapeHtml(m.path)}<div class=\"muted\">${m.snippet}</div></div>`).join('')}</div>`;
+      $$('.result', viewer).forEach(div=>{
+        div.onclick = async ()=>{ const p = div.getAttribute('data-path'); try{ const it = await getItem(p); openFile(it, p); }catch{} };
+      });
+    }
+
+    function runSearch(){
+      const q = searchBox.value.trim();
+      if(!q){ return; }
+      if(!contentSearch){ // filename filter only
+        const qq = q.toLowerCase();
+        [subjectsTree, decksTree].forEach(tree=>{
+          $$('.tree li', tree).forEach(li=>{ const name = li.dataset.name || ''; li.style.display = name.includes(qq) ? '' : 'none'; });
+        });
+        viewer.innerHTML = `<div class="muted" style="padding:12px">Filtered by name: “${escapeHtml(q)}”</div>`;
+        return;
+      }
+      // content search
+      buildIndex().then(()=>{
+        const qq = q.toLowerCase();
+        const matches = [];
+        for(const {path, item} of indexPaths){
+          const text = indexMap.get(path); if(!text) continue;
+          const pos = text.indexOf(qq);
+          if(pos !== -1){
+            const start = Math.max(0, pos - 40), end = Math.min(text.length, pos + 80);
+            const snip = text.slice(start, end).replaceAll('\n',' ').replaceAll('<','&lt;');
+            const highlighted = snip.replaceAll(qq, `<span class='hl'>${escapeHtml(q)}</span>`);
+            matches.push({path, snippet: '… ' + highlighted + ' …'});
+          }
+        }
+        showSearchResults(q, matches.slice(0, 200));
+      });
+    }
+
+    let searchTimer=null; searchBox.addEventListener('input', ()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 350); });
+
+    // Clock
+    const clockDisplay = $('#clockDisplay');
+    const dateDisplay = $('#dateDisplay');
+    function updateClock(){
+      const d = new Date();
+      const hh = d.getHours().toString().padStart(2,'0');
+      const mm = d.getMinutes().toString().padStart(2,'0');
+      const ss = d.getSeconds().toString().padStart(2,'0');
+      clockDisplay && (clockDisplay.textContent = `${hh}:${mm}:${ss}`);
+      dateDisplay && (dateDisplay.textContent = d.toLocaleDateString());
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    // INITIALIZATION
+    if(REPO){ loadRoot(); }
+
+    // Deep-link: ?path=...
+    try{ const p = new URL(location.href).searchParams.get('path'); if(p && REPO){ getItem(p).then(it=>openFile(it,p)).catch(()=>{}); } }catch{}
+  })();
+  </script>
+</body>
+</html>
