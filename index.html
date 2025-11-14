@@ -11,6 +11,8 @@
       --shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.45);
       --radius: 12px; --radius-sm: 8px;
       --content-max: 1100px; --font-size: 14px;
+      --nav-w: clamp(220px, 26vw, 320px);
+      --aside-w: clamp(240px, 30vw, 420px);
     }
     [data-theme="light"] {
       --bg: #ffffff; --bg-elev:#f6f8fb; --fg:#0f141a; --muted:#566070; --border:#d8dee6; --accent:#006adc;
@@ -24,17 +26,18 @@
     header .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px; }
     header .brand .dot { width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 24px var(--accent); }
     header .spacer { flex:1; }
-    header input[type=text] { background: #0c0e12; border:1px solid var(--border); color:var(--fg); padding:10px 12px; border-radius:10px; min-width:320px; outline: none; box-shadow: var(--shadow); }
+    header input[type=text] { background: #0c0e12; border:1px solid var(--border); color:var(--fg); padding:10px 12px; border-radius:10px; width: clamp(140px, 36vw, 520px); min-width:0; outline: none; box-shadow: var(--shadow); }
     .toggle { padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:#0c0e12; color:var(--fg); cursor:pointer; }
     .btn { background: var(--accent); color: #071019; border: none; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; }
     .ghost { background: transparent; border:1px solid var(--border); color: var(--fg); padding:10px 14px; border-radius:10px; cursor:pointer; }
     .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:var(--muted); }
 
-    .main { display:grid; grid-template-columns: 300px 1fr 420px; height: calc(100vh - 60px); }
-    nav { border-right:1px solid var(--border); overflow:auto; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); }
+    .main { display:grid; grid-template-columns: var(--nav-w) 1fr var(--aside-w); height: calc(100vh - 60px); }
+    nav { border-right:1px solid var(--border); overflow:auto; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); z-index: 5; }
     nav h3 { margin:14px 14px 6px; font-size:11px; text-transform:uppercase; letter-spacing:.14em; color: var(--muted); }
-    .tree { list-style:none; margin:0; padding:0; }
+    .tree { list-style:none; margin:0; padding:0 6px 0 0; }
     .tree li { padding:8px 12px 8px 16px; cursor:pointer; display:flex; align-items:center; gap:10px; border-left:2px solid transparent; }
+    .tree li span:nth-child(2){ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .tree li:hover { background: rgba(255,255,255,0.04); }
     .tree .indent { margin-left: 14px; border-left: 1px dashed var(--border); border-radius:0 0 0 var(--radius-sm); }
     .empty { color:var(--muted); padding:12px 14px; }
@@ -43,8 +46,8 @@
     .breadcrumbs { padding:8px 14px; border-bottom:1px solid var(--border); color: var(--muted); white-space:nowrap; overflow:auto; }
     .deckbar { display:none; align-items:center; gap:10px; padding:8px 14px; border-bottom:1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); }
     .deckbar.active { display:flex; }
-    .viewer { padding: 20px 24px; overflow:auto; max-width: var(--content-max); width: 100%; }
-    .viewer img { max-width: 100%; border-radius:10px; }
+    .viewer { padding: 20px 24px; overflow:auto; max-width: var(--content-max); width: 100%; margin: 0 auto; }
+    .viewer img { max-width: 100%; height:auto; border-radius:10px; }
     .viewer pre { background: #0b0f14; color:#e6e6e6; padding:14px; border-radius:10px; overflow:auto; border:1px solid var(--border); box-shadow: var(--shadow); }
     .viewer code { background: #0b0f14; padding:2px 6px; border-radius:6px; }
     .viewer table { width:100%; border-collapse: collapse; margin: 8px 0 14px; }
@@ -52,7 +55,7 @@
     .viewer blockquote { margin: 10px 0; padding: 8px 12px; border-left:3px solid var(--accent); background: rgba(255,255,255,0.03); border-radius:6px; }
     .viewer h1, .viewer h2, .viewer h3 { border-bottom: 1px dashed var(--border); padding-bottom: 6px; }
 
-    aside { border-left:1px solid var(--border); overflow:auto; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); display:flex; flex-direction:column; }
+    aside { border-left:1px solid var(--border); overflow:auto; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); display:flex; flex-direction:column; z-index: 5; }
     aside section { padding:14px; border-bottom:1px solid var(--border); }
     aside h4 { margin:0 0 10px; color: var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.12em; font-size:11px; }
     textarea { width:100%; min-height:140px; resize:vertical; background:#0c0e12; color:var(--fg); border:1px solid var(--border); border-radius:10px; padding:10px; box-shadow: var(--shadow); }
@@ -64,6 +67,27 @@
     .hidden { display:none; }
     iframe.pdf, iframe.web { width:100%; height:72vh; border:1px solid var(--border); border-radius:10px; background:white; box-shadow: var(--shadow); }
     iframe.notes { width:100%; height: calc(100% - 20px); border:1px solid var(--border); border-radius:10px; background:#0c0e12; box-shadow: var(--shadow); }
+
+    /* Responsive drawers */
+    #backdrop { position: fixed; inset: 60px 0 0 0; background: rgba(0,0,0,0.5); display:none; z-index: 90; }
+    .nav-open #backdrop, .aside-open #backdrop { display:block; }
+    @media (max-width: 1200px){
+      .main { grid-template-columns: var(--nav-w) 1fr; }
+      aside { display:none; }
+      .aside-open aside { display:block; position: fixed; right:0; top:60px; width:min(90vw, var(--aside-w)); height: calc(100vh - 60px); background: var(--bg-elev); box-shadow: var(--shadow); }
+    }
+    @media (max-width: 960px){
+      .main { grid-template-columns: 1fr; }
+      nav { display:none; }
+      .nav-open nav { display:block; position: fixed; left:0; top:60px; width:min(90vw, var(--nav-w)); height: calc(100vh - 60px); background: var(--bg-elev); box-shadow: var(--shadow); }
+      .viewer { padding: 16px; }
+      header input[type=text] { width: clamp(120px, 36vw, 360px); }
+    }
+    @media (max-width: 600px){
+      header { gap:8px; }
+      .btn, .ghost, .toggle { padding:8px 10px; }
+      .viewer { padding: 12px; }
+    }
 
     .results { padding: 8px 12px; }
     .result { padding: 8px 10px; border:1px solid var(--border); border-radius:10px; margin:8px 0; background:#0c0e12; cursor:pointer; }
@@ -79,6 +103,8 @@
       <div class="brand"><div class="dot"></div><div>Study-Deck</div></div>
       <span id="repoLabel" class="pill">Loading…</span>
       <div class="spacer"></div>
+      <button id="filesBtn" class="ghost" title="Show files">Files</button>
+      <button id="utilsBtn" class="ghost" title="Show utilities">Utils</button>
       <input id="searchBox" type="text" placeholder="Search filenames or contents…" />
       <button id="searchToggle" class="toggle" title="Toggle content search">Contents: Off</button>
       <button id="notesBtn" class="btn" title="Open NeuralNotes">Notes</button>
@@ -133,6 +159,7 @@
       </aside>
     </div>
   </div>
+  <div id="backdrop"></div>
 
   <dialog id="themeDialog">
     <form method="dialog" style="min-width:380px; background:var(--bg-elev); color:var(--fg); border:1px solid var(--border); padding:16px; border-radius:12px;">
@@ -235,9 +262,15 @@
     const searchToggle = $('#searchToggle');
     const notesBtn = $('#notesBtn');
     const nnDialog = $('#nnDialog');
+    const filesBtn = $('#filesBtn');
+    const utilsBtn = $('#utilsBtn');
+    const backdrop = $('#backdrop');
     let contentSearch = false;
     searchToggle.onclick = ()=>{ contentSearch = !contentSearch; searchToggle.textContent = 'Contents: ' + (contentSearch? 'On':'Off'); if(searchBox.value.trim()) runSearch(); };
     notesBtn.onclick = ()=> nnDialog.showModal();
+    filesBtn.onclick = ()=>{ appEl.classList.add('nav-open'); };
+    utilsBtn.onclick = ()=>{ appEl.classList.add('aside-open'); };
+    backdrop.onclick = ()=>{ appEl.classList.remove('nav-open'); appEl.classList.remove('aside-open'); };
 
     // CACHES
     const cache = new Map();
@@ -377,6 +410,7 @@
     function makeNode(item, fullPath){
       const li = document.createElement('li');
       li.dataset.name = item.name.toLowerCase();
+      li.title = fullPath;
       li.innerHTML = `<span>${iconFor(item)}</span><span>${item.name}</span>`;
       li.onclick = async (e)=>{
         e.stopPropagation();
